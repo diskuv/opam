@@ -837,8 +837,22 @@ module OpamSys = struct
     (* Note: we ask Unix.getenv instead of Env.get to avoid
        forcing the environment in this function that is used
        before the .init() functions are called -- see
-       OpamStateConfig.default. *)
-    let home = lazy (try Unix.getenv "HOME" with Not_found -> Sys.getcwd ()) in
+       OpamStateConfig.default.
+       For Windows we check HOME first for backwards-compatible
+       support of Cygwin users, and then check for native Windows
+       users where a consumer/enterprise friendly home directory
+       is LOCALAPPDATA.
+    *)
+    let home = lazy (
+      try Unix.getenv "HOME"
+      with Not_found ->
+        if Sys.win32 then
+          try Unix.getenv "LOCALAPPDATA"
+        with Not_found ->
+          Sys.getcwd ()
+        else
+          Sys.getcwd ())
+    in
     fun () -> Lazy.force home
 
   let etc () = "/etc"
