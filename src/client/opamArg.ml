@@ -1025,6 +1025,9 @@ let shell_opt cli validity =
     "csh",SH_csh;
     "zsh",SH_zsh;
     "fish",SH_fish;
+    "pwsh",SH_pwsh;
+    "cmd",SH_win_cmd;
+    "powershell",SH_win_powershell
   ] |> List.map (fun (s,v) -> cli_original, s, v)
   in
   mk_enum_opt ~cli validity ["shell"] "SHELL" enum
