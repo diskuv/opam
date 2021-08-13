@@ -1086,23 +1086,27 @@ module OpamSys = struct
       (fun f -> try f () with _ -> ())
       !registered_at_exit
 
-  let is_cygwin_variant =
+  let get_windows_executable_variant =
     if Sys.win32 then
       let results = Hashtbl.create 17 in
-      let requires_cygwin name =
+      let requires_cygwin_or_msys2 name =
         let cmd = Printf.sprintf "cygcheck \"%s\"" name in
         let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
         let rec f a =
           match input_line c with
           | x ->
-              (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
-                 Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
               let tx = String.trim x in
-              if (OpamString.ends_with ~suffix:"cygwin1.dll" tx ||
-                  OpamString.ends_with ~suffix:"msys-2.0.dll" tx) then
+              if OpamString.ends_with ~suffix:"cygwin1.dll" tx then
                 if OpamString.starts_with ~prefix:"  " x then
                   f `Cygwin
-                else if a <> `Cygwin then
+                else if a <> `Cygwin && a <> `Msys2 then
+                  f `CygLinked
+                else
+                  f a
+              else if OpamString.ends_with ~suffix:"msys-2.0.dll" tx then
+                if OpamString.starts_with ~prefix:"  " x then
+                  f `Msys2
+                else if a <> `Cygwin && a <> `Msys2 then
                   f `CygLinked
                 else
                   f a
@@ -1117,17 +1121,24 @@ module OpamSys = struct
       in
       fun name ->
         if Filename.is_relative name then
-          requires_cygwin name
+          requires_cygwin_or_msys2 name
         else
           try
             Hashtbl.find results name
           with Not_found ->
-            let result = requires_cygwin name
+            let result = requires_cygwin_or_msys2 name
             in
               Hashtbl.add results name result;
               result
     else
       fun _ -> `Native
+
+  let is_cygwin_variant cmd =
+    match get_windows_executable_variant cmd with
+    | `Native -> `Native
+    | `Cygwin -> `Cygwin
+    | `CygLinked -> `CygLinked
+    | `Msys2 -> `Cygwin
 
   exception Exit of int
   exception Exec of string * string array * string array
