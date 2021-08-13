@@ -1013,7 +1013,7 @@ module OpamSys = struct
   let is_cygwin_variant =
     if Sys.win32 then
       let results = Hashtbl.create 17 in
-      let requires_cygwin name =
+      let requires_cygwin_or_msys2 name =
         let cmd = Printf.sprintf "cygcheck \"%s\"" name in
         let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
         let rec f a =
@@ -1041,12 +1041,52 @@ module OpamSys = struct
       in
       fun name ->
         if Filename.is_relative name then
-          requires_cygwin name
+          requires_cygwin_or_msys2 name
         else
           try
             Hashtbl.find results name
           with Not_found ->
-            let result = requires_cygwin name
+            let result = requires_cygwin_or_msys2 name
+            in
+              Hashtbl.add results name result;
+              result
+    else
+      fun _ -> `Native
+
+  let is_msys2_variant =
+    if Sys.win32 then
+      let results = Hashtbl.create 17 in
+      let requires_msys2 name =
+        let cmd = Printf.sprintf "cygcheck \"%s\"" name in
+        let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
+        let rec f a =
+          match input_line c with
+          | x ->
+              (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
+                 Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
+              let tx = String.trim x in
+              if (OpamString.ends_with ~suffix:"msys-2.0.dll" tx) then
+                if OpamString.starts_with ~prefix:"  " x then
+                  f `Msys2
+                else
+                  f a
+              else
+                f a
+          | exception e ->
+              Unix.close_process_full process |> ignore;
+              fatal e;
+              a
+        in
+        f `Native
+      in
+      fun name ->
+        if Filename.is_relative name then
+          requires_msys2 name
+        else
+          try
+            Hashtbl.find results name
+          with Not_found ->
+            let result = requires_msys2 name
             in
               Hashtbl.add results name result;
               result

@@ -452,13 +452,30 @@ module Sys : sig
   val split_path_variable: ?clean:bool -> string -> string list
 
   (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
-      compiled executable, [`CygLinked] if the command links to a library which is
-      itself Cygwin-compiled or [`Native] otherwise.
+      compiled or MSYS2-compiled executable, [`CygLinked] if the command links
+      to a library which is itself Cygwin- or MSYS2-compiled or [`Native]
+      otherwise.
+
+      MSYS2 is similar in most respects to Cygwin. If you need to differentiate
+      use {!Sys.is_msys2_variant}.
+      Confer with
+      {{:https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/}
+      How does MSYS2 differ from Cygwin} for the differences.
 
       Note that this returns [`Native] on a Cygwin-build of opam!
 
       Both cygcheck and an unqualified command will be resolved using the current PATH. *)
   val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
+
+  (** For native Windows builds, returns [`Msys2] if the command is a MSYS2-
+      compiled executable or [`Native] otherwise.
+
+      Consult
+      {{:https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/}
+      How does MSYS2 differ from Cygwin} for the differences between Cygwin and MSYS2.
+
+      Both cygcheck and an unqualified command will be resolved using the current PATH. *)
+  val is_msys2_variant: string -> [ `Native | `Msys2 ]
 
   (** {3 Exit handling} *)
 
