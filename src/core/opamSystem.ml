@@ -12,7 +12,8 @@
 open OpamCompat
 
 type install_warning =
-  [ `Add_exe | `Install_dll | `Install_script | `Install_unknown | `Cygwin | `Cygwin_libraries ]
+  [ `Add_exe | `Install_dll | `Install_script | `Install_unknown
+  | `Cygwin | `Msys2 | `Tainted of [`Msys2 | `Cygwin] | `Cygwin_libraries ]
 type install_warning_fn = string -> install_warning -> unit
 
 exception Process_error of OpamProcess.result
@@ -479,10 +480,9 @@ let get_cygpath_function =
   if Sys.win32 then
     fun ~command ->
       lazy (
-        match OpamStd.(Option.map_default Sys.get_windows_executable_variant `Native (resolve_command command)) with
-        | `Cygwin | `Msys2 ->
+        if OpamStd.(Option.map_default Sys.is_cygwin_variant `Native (resolve_command command)) = `Cygwin then
           apply_cygpath
-        | _ ->
+        else
           fun x -> x)
   else
     let f = Lazy.from_val (fun x -> x) in
@@ -758,6 +758,12 @@ let default_install_warning dst = function
     ()
 | `Cygwin ->
     OpamConsole.warning "%s is a Cygwin-linked executable" dst
+| `Msys2 ->
+    OpamConsole.warning "%s is a MSYS2-linked executable" dst
+| `Tainted `Cygwin ->
+    OpamConsole.warning "%s is an executable which links to a Cygwin-linked library" dst
+| `Tainted `Msys2 ->
+    OpamConsole.warning "%s is an executable which links to a MSYS2-linked library" dst
 | `Cygwin_libraries ->
     OpamConsole.warning "%s links with a Cygwin-compiled DLL (almost certainly a packaging or environment error)" dst
 
@@ -795,9 +801,9 @@ let install ?(warning=default_install_warning) ?exec src dst =
       copy_file_aux ~src ~dst ();
       if cygcheck then
         match OpamStd.Sys.get_windows_executable_variant dst with
-          `Native ->
+        | `Native ->
             ()
-        (`Cygwin | `Msys2 | `Tainted _) as code ->
+        | (`Cygwin | `Msys2 | `Tainted _) as code ->
             warning dst code
     end else
       copy_file_aux ~src ~dst ()

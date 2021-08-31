@@ -1089,7 +1089,7 @@ module OpamSys = struct
   let get_windows_executable_variant =
     if Sys.win32 then
       let results = Hashtbl.create 17 in
-      let requires_cygwin_or_msys2 name =
+      let requires_cygwin name =
         let cmd = Printf.sprintf "cygcheck \"%s\"" name in
         let ((c, _, _) as process) = Unix.open_process_full cmd (Unix.environment ()) in
         let rec f a =
@@ -1121,12 +1121,12 @@ module OpamSys = struct
       in
       fun name ->
         if Filename.is_relative name then
-          requires_cygwin_or_msys2 name
+          requires_cygwin name
         else
           try
             Hashtbl.find results name
           with Not_found ->
-            let result = requires_cygwin_or_msys2 name
+            let result = requires_cygwin name
             in
               Hashtbl.add results name result;
               result
