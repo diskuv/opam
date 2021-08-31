@@ -1136,9 +1136,9 @@ module OpamSys = struct
   let is_cygwin_variant cmd =
     match get_windows_executable_variant cmd with
     | `Native -> `Native
-    | `Cygwin -> `Cygwin
-    | `CygLinked -> `CygLinked
+    | `Cygwin
     | `Msys2 -> `Cygwin
+    | `Tainted _ -> `CygLinked
 
   exception Exit of int
   exception Exec of string * string array * string array
