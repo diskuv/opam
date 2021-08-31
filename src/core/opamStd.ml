@@ -1099,15 +1099,15 @@ module OpamSys = struct
               if OpamString.ends_with ~suffix:"cygwin1.dll" tx then
                 if OpamString.starts_with ~prefix:"  " x then
                   f `Cygwin
-                else if a <> `Cygwin && a <> `Msys2 then
-                  f `CygLinked
+                else if a = `Native then
+                  f (`Tainted `Cygwin)
                 else
                   f a
               else if OpamString.ends_with ~suffix:"msys-2.0.dll" tx then
                 if OpamString.starts_with ~prefix:"  " x then
                   f `Msys2
-                else if a <> `Cygwin && a <> `Msys2 then
-                  f `CygLinked
+                else if a = `Native then
+                  f (`Tainted `Msys2)
                 else
                   f a
               else
