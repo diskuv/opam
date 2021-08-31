@@ -797,10 +797,8 @@ let install ?(warning=default_install_warning) ?exec src dst =
         match OpamStd.Sys.get_windows_executable_variant dst with
           `Native ->
             ()
-        | `Cygwin | `Msys2 ->
-            warning dst `Cygwin
-        | `CygLinked ->
-            warning dst `Cygwin_libraries
+        (`Cygwin | `Msys2 | `Tainted _) as code ->
+            warning dst code
     end else
       copy_file_aux ~src ~dst ()
   else
