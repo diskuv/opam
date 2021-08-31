@@ -468,18 +468,14 @@ module Sys : sig
       Both cygcheck and an unqualified command will be resolved using the current PATH. *)
   val get_windows_executable_variant: string -> [ `Native | `Cygwin | `CygLinked | `Msys2 ]
 
-  (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
+  (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin- or Msys2-
       compiled executable, and [`CygLinked] if the command links to a library which is itself
-      Cygwin-compiled, or [`Native] otherwise.
+      Cygwin/Msys2-compiled, or [`Native] otherwise.
 
       Note that this returns [`Native] on a Cygwin-build of opam!
 
-      MSYS2-compiled executables will return [`Cygwin], but you should be using
-      [get_windows_executable_variant] instead. This function is deprecated.
-
       Both cygcheck and an unqualified command will be resolved using the current PATH. *)
   val is_cygwin_variant: string -> [ `Native | `Cygwin | `CygLinked ]
-  [@@@ocaml.alert deprecated "Please use get_windows_executable_variant instead"]
 
   (** {3 Exit handling} *)
 
