@@ -460,7 +460,7 @@ module Sys : sig
 
   (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
       compiled executable, [`Msys2] if the command is a MSYS2-compiled executable,
-      and [`CygLinked] if the command links to a library which is itself
+      and [`Tainted of [ `Msys2 | `Cygwin ]] if the command links to a library which is itself
       Cygwin- or MSYS2-compiled, or [`Native] otherwise.
 
       Note that this returns [`Native] on a Cygwin-build of opam!
