@@ -609,46 +609,7 @@ let copy_file src dst =
   copy_file_aux ~src ~dst ()
 
 let copy_dir src dst =
-  (* MSYS2 requires special handling because its uses copying rather than
-     symlinks for maximum portability on Windows. However copying a
-     source directory containing symlinks presents a problem.
-
-     As a real example look at https://github.com/OCamlPro/ocp-indent/tree/1.8.2/tests/inplace:
-
-      $ ls -l tests/inplace/
-      total 0
-      -rw-r--r-- 1 user group  0 Aug 12 20:53 executable.ml
-      lrwxrwxrwx 1 user group 12 Aug 12 20:53 link.ml -> otherfile.ml
-      lrwxrwxrwx 1 user group  7 Aug 12 20:53 link2.ml -> link.ml
-      -rw-r--r-- 1 user group  0 Aug 12 20:53 otherfile.ml
-
-    With a regular copy:
-
-      cp -PRp ...\ocp-indent-1.8.1\tests ... \tmp\ocp-indent.1.8.1
-
-    it _can_ fail with:
-
-      # /usr/bin/cp: cannot create symbolic link 'C:\somewhere/tests/inplace/link.ml': No such file or directory
-      # /usr/bin/cp: cannot create symbolic link 'C:\somewhere/tests/inplace/link2.ml': No such file or directory
-
-    What is happening is that _if_ link2.ml is copied before link.ml, then the copy of link2.ml will fail with
-    "No such file or directory". What is worse, it depends on the opaque order in which the files are
-    copied; sometimes it can work and sometimes it won't.
-
-    So we do a two-pass copy. The first pass copies everything except the symlinks, and the second pass copies
-    everything that remained. Rsync is the perfect tool for that.
-   *)
-  if OpamStd.Sys.is_msys2_variant "rsync" = `Msys2 then
-    let convert_path = Lazy.force (get_cygpath_function ~command:"rsync") in
-    (* ensure that rsync doesn't recreate a subdir: add trailing '/' even if cygpath may add one *)
-    let trailingslash_cygsrc = (OpamStd.String.remove_suffix ~suffix:"/" (convert_path src)) ^ "/" in
-    let cygdest = convert_path dst in
-    (if Sys.file_exists dst then () else mkdir (Filename.dirname dst);
-     command ~verbose:(verbose_for_base_commands ())
-       ([ "rsync"; "-a"; "--no-links"; trailingslash_cygsrc; cygdest ]);
-     command ~verbose:(verbose_for_base_commands ())
-       ([ "rsync"; "-a"; "--ignore-existing"; trailingslash_cygsrc; cygdest ]))
-  else if Sys.file_exists dst then
+  if Sys.file_exists dst then
     if Sys.is_directory dst then
       match ls src with
       | [] -> ()
