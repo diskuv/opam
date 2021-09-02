@@ -348,18 +348,12 @@ let is_up_to_date ?skip st =
 
 (** Returns shell-appropriate statement to evaluate [cmd]. *)
 let shell_eval_invocation shell cmd =
-  (* If we are running on Windows but not Cygwin or MSYS2, suggest a shell invocation for PowerShell.
-     We are running in a functioning Cygwin or MSYS2 environment if and only if `cygpath` is in the PATH.
-   *)
-  let is_native_windows = Sys.win32 && Option.is_none (OpamSystem.resolve_command "cygpath") in
-  match is_native_windows, shell with
-  | true, _ ->
-    Printf.sprintf "(& %s) -split '\\r?\\n' | ForEach-Object { Invoke-Expression ( '$env:' + ($_ -split '; export')[0] ) }" cmd
-  | _, SH_fish ->
+  match shell with
+  | SH_fish ->
     Printf.sprintf "eval (%s)" cmd
-  | _, SH_csh ->
+  | SH_csh ->
     Printf.sprintf "eval `%s`" cmd
-  | _, _ ->
+  | _ ->
     Printf.sprintf "eval $(%s)" cmd
 
 (** Returns "opam env" invocation string together with optional root and switch
