@@ -205,8 +205,13 @@ SCAN_ENV=0
 WHICH=$(which which)
 
 if [[ $(uname --operating-system 2>/dev/null) = "Msys" ]] ; then
-  # Prevent MSYS from translating command line switches to paths
-  SWITCH_PREFIX='//'
+  # Prevent MSYS from translating command line switches to paths _if_ MSYS2_ARG_CONV_EXCL
+  # has not been set
+  if [[ -n "${MSYS2_ARG_CONV_EXCL:-}" ]]; then
+    SWITCH_PREFIX='/'
+  else
+    SWITCH_PREFIX='//'
+  fi
 else
   SWITCH_PREFIX='/'
 fi
@@ -733,7 +738,7 @@ if [[ -x $VSWHERE ]] ; then
           warning "vcvarsall.bat not found for $INSTANCE"
         fi;;
     esac
-  done < <("$VSWHERE" -all -nologo | tr -d '\r')
+  done < <("$VSWHERE" -all -products '*' -nologo | tr -d '\r')
 fi
 
 if [[ $DEBUG -gt 1 ]] ; then
@@ -977,8 +982,12 @@ for i in "${TEST[@]}" ; do
         TEST_cl=${TEST_cl,,}
         TEST_cl=${TEST_cl/bin\/*_/bin\/}
         if [[ $TEST_cl = $ENV_cl ]] ; then
-          if [[ ${!ENV_INC/"$MSVS_INC"/} != "${!ENV_INC}" && \
-                ${!ENV_LIB/"$MSVS_LIB"/} != "${!ENV_LIB}" ]] ; then
+          # Create trailing semi-colon versions of the expansions of ENV_ for comparison with MSVS_
+          ENV_EXPAND_INC="${!ENV_INC%%;};"
+          ENV_EXPAND_LIB="${!ENV_LIB%%;};"
+
+          if [[ ${ENV_EXPAND_INC/"$MSVS_INC"/} != "${ENV_EXPAND_INC}" && \
+                ${ENV_EXPAND_LIB/"$MSVS_LIB"/} != "${ENV_EXPAND_LIB}" ]] ; then
             debug "$i-$arch is a strong candidate for the Environment C compiler"
             if [[ -n ${ENV_COMPILER+x} ]] ; then
               if [[ -z ${ENV_COMPILER} ]] ; then
