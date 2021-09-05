@@ -183,8 +183,17 @@ let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
       (Unix.fstat (Unix.descr_of_in_channel ic)).st_perm |> chmod
     in
     let () =
-      try if Unix.((lstat dst).st_kind <> S_REG) then
-            remove_file dst
+      (*
+        Windows, at least with Microsoft (MSVC) runtime library,
+        will give "Permission denied" if `dst` is -r-xr-xr-x (MSYS2)
+        or -r-x------+ (Cygwin), and then you write to the file (ex.
+        `open_out_gen [Open_trunc]`; `Unix.unlink`; etc.). So on
+        Windows always chmod the file first if we are not delegating
+        to MSYS2 or Cygwin executables.
+      *)
+      try if Sys.win32 || Unix.((lstat dst).st_kind <> S_REG) then
+        if Sys.win32 then Unix.chmod dst 0o640 else ();
+        remove_file dst
       with Unix.Unix_error(ENOENT, _, _) -> ()
     in
     let oc =
