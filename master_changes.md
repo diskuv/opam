@@ -108,6 +108,12 @@ New option/command/subcommand are prefixed with ◈.
   * Bump version to 2.2.0~alpha~dev [#4725 @dra27]
   * Support MSYS2: two-phase rsync on MSYS2 to allow MSYS2's behavior of copying rather than symlinking [#4817 @jonahbeckford]
 
+## Internal: Windows
+  * Support MSYS2: treat MSYS2 and Cygwin as equivalent [#4813 @jonahbeckford]
+  * Process control: close stdin by default for Windows subprocesses and on all platforms for the download command [#4615 @dra27]
+  * [BUG] handle converted variables correctly when no_undef_expand is true [#4811 @timbertson]
+  * Environment: translate PATH from Windows to Unix during opam env. [#4844 @jonahbeckford]
+
 ## Test
   *
 
