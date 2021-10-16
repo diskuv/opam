@@ -65,6 +65,20 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Build
   *
+  * Bump src_exts and fix build compat with Dune 2.9.0 [#4752 @dra27]
+  * Upgrade to dose3 >= 6.1 and vendor dose3 7.0.0 [#4760 @kit-ty-kate]
+  * Change minimum required OCaml to 4.03.0 [#4770 @dra27]
+  * Change minimum required Dune to 2.0 [#4770 @dra27]
+  * Change minimum required OCaml to 4.08.0 for everything except opam-core, opam-format and opam-installer [#4775 @dra27]
+  * Fix the cold target in presence of an older OCaml compiler version on macOS [#4802 @kit-ty-kate - fix #4801]
+  * Harden the check for a C++ compiler [#4776 @dra27 - fix #3843]
+  * Add `--without-dune` to configure to force compiling vendored Dune [#4776 @dra27]
+  * Use `--without-dune` in `make cold` to avoid picking up external Dune [#4776 @dra27 - fix #3987]
+  * Add `--with-vendored-deps` to replace `make lib-ext` instruction [#4776 @dra27 - fix #4772]
+  * Fix vendored build on mingw-w64 with g++ 11.2 [#4835 @dra27]
+  * Switch to vendored build if spdx_licenses is missing [#4842 @dra27]
+  * Check versions of findlib packages in configure [#4842 @dra27]
+  * Fix dose3 download url since gforge is gone [#4870 @avsm]
 
 ## Infrastructure
   *
