@@ -194,6 +194,10 @@ let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
       try if Sys.win32 || Unix.((lstat dst).st_kind <> S_REG) then
         if Sys.win32 then Unix.chmod dst 0o640 else ();
         remove_file dst
+      with Unix.Unix_error(ENOENT, _, _) -> ();
+      (* Windows does not implement fchmod used later in this function *)
+      try
+        if Sys.win32 then Unix.chmod dst perm
       with Unix.Unix_error(ENOENT, _, _) -> ()
     in
     let oc =
@@ -203,7 +207,7 @@ let setup_copy ?(chmod = fun x -> x) ~src ~dst () =
     in
     let fd = Unix.descr_of_out_channel oc in
     try
-      if Unix.((fstat fd).st_perm) <> perm then
+      if not Sys.win32 && Unix.((fstat fd).st_perm) <> perm then
         Unix.fchmod fd perm;
       (ic, oc)
     with exn ->
